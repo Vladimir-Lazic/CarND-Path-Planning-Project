@@ -108,35 +108,87 @@ int main()
                         car_s = end_path_s;
                     }
 
-                    bool too_close = false;
+                    bool car_ahead = false;
+                    bool car_left = false;
+                    bool car_right = false;
 
                     for (int i = 0; i < sensor_fusion.size(); i++)
                     {
                         float d = sensor_fusion[i][6];
-                        if (d < (2 + 4 * lane + 2) && d > (2 + 4 * lane - 2))
+                        int car_lane = -1;
+
+                        if (d > 0 && d < 4)
                         {
-                            double v_x = sensor_fusion[i][3];
-                            double v_y = sensor_fusion[i][4];
+                            car_lane = 0;
+                        }
+                        else if (d > 4 && d < 8)
+                        {
+                            car_lane = 1;
+                        }
+                        else if (d > 8 && d < 12)
+                        {
+                            car_lane = 2;
+                        }
 
-                            double check_speed = sqrt(v_x * v_x + v_y * v_y);
-                            double check_car_s = sensor_fusion[i][5];
+                        if (car_lane == -1)
+                        {
+                            continue;
+                        }
 
-                            check_car_s += (double)prev_size * 0.02 * check_speed;
+                        double v_x = sensor_fusion[i][3];
+                        double v_y = sensor_fusion[i][4];
 
-                            if (check_car_s > car_s && (check_car_s - car_s) < 30)
-                            {
-                                too_close = true;
-                            }
+                        double check_speed = sqrt(v_x * v_x + v_y * v_y);
+                        double check_car_s = sensor_fusion[i][5];
+
+                        check_car_s += (double)prev_size * 0.02 * check_speed;
+
+                        if (car_lane == lane)
+                        {
+                            // Is there a car in our lane
+                            car_ahead |= check_car_s > car_s && (check_car_s - car_s) < 30;
+                        }
+                        else if (car_lane - lane == -1)
+                        {
+                            // Is there a car in the lane left
+                            car_left |= car_s - 30 < check_car_s && car_s + 30 > check_car_s;
+                        }
+                        else if (car_lane - lane == 1)
+                        {
+                            // Is there a car in the lane to the right
+                            car_right |= car_s - 30 < check_car_s && car_s + 30 > check_car_s;
                         }
                     }
 
-                    if (too_close)
+                    if (car_ahead)
                     {
-                        ref_vel -= 0.224;
+                        if (!car_left && lane > 0)
+                        {
+                            lane--;
+                        }
+                        else if (!car_right && lane != 2)
+                        {
+                            lane++;
+                        }
+                        else
+                        {
+                            ref_vel -= 0.224;
+                        }
                     }
-                    else if (ref_vel < 49.5)
+                    else
                     {
-                        ref_vel += 0.224;
+                        if (lane != 1)
+                        {
+                            if ((lane == 0 && !car_right) && (lane == 2 && !car_right))
+                            {
+                                lane = 1;
+                            }
+                        }
+
+                        if (ref_vel < 49.5)
+                        {
+                            ref_vel += 0.224;
+                        }
                     }
 
                     // Create a list of widely spaced waypoints

@@ -14,6 +14,10 @@ using nlohmann::json;
 using std::string;
 using std::vector;
 
+int lane = 1;
+
+double ref_vel = 0.0;
+
 int main()
 {
     uWS::Hub h;
@@ -60,10 +64,6 @@ int main()
         // The 4 signifies a websocket message
         // The 2 signifies a websocket event
 
-        int lane = 1;
-
-        double ref_val = 49.5;
-
         if (length && length > 2 && data[0] == '4' && data[1] == '2')
         {
 
@@ -103,6 +103,41 @@ int main()
                     int prev_size = previous_path_x.size();
 
                     // Add sensor fusion data here
+                    if (prev_size > 0)
+                    {
+                        car_s = end_path_s;
+                    }
+
+                    bool too_close = false;
+
+                    for (int i = 0; i < sensor_fusion.size(); i++)
+                    {
+                        float d = sensor_fusion[i][6];
+                        if (d < (2 + 4 * lane + 2) && d > (2 + 4 * lane - 2))
+                        {
+                            double v_x = sensor_fusion[i][3];
+                            double v_y = sensor_fusion[i][4];
+
+                            double check_speed = sqrt(v_x * v_x + v_y * v_y);
+                            double check_car_s = sensor_fusion[i][5];
+
+                            check_car_s += (double)prev_size * 0.02 * check_speed;
+
+                            if (check_car_s > car_s && (check_car_s - car_s) < 30)
+                            {
+                                too_close = true;
+                            }
+                        }
+                    }
+
+                    if (too_close)
+                    {
+                        ref_vel -= 0.224;
+                    }
+                    else if (ref_vel < 49.5)
+                    {
+                        ref_vel += 0.224;
+                    }
 
                     // Create a list of widely spaced waypoints
                     vector<double> ptsx;
@@ -181,7 +216,7 @@ int main()
 
                     for (int i = 1; i <= 50 - prev_size; i++)
                     {
-                        double N = target_dist / (0.02 * ref_val / 2.24);
+                        double N = target_dist / (0.02 * ref_vel / 2.24);
                         double x_point = x_add_on + target_x / N;
                         double y_point = spline(x_point);
 

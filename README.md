@@ -5,6 +5,10 @@ Self-Driving Car Engineer Nanodegree Program
 
 [image1]: ./examples/code_snipet.png "State Machine"
 [image2]: ./examples/result.png "Result"
+[image3]: ./examples/sim.gif "Simulation"
+[image4]: ./examples/car1.png "Res1"
+[image5]: ./examples/car2.png "Res2"
+[image6]: ./examples/speed.png "Speed"
 
 ![alt text][image2]
   
@@ -21,8 +25,12 @@ Implementation of highway driving, using localization and sensor fusion. Below I
 
 #### 1. The car is able to drive at least 4.32 miles without incident..
 After running the finished implementation in the simulator my personal best is 6.23 miles without any incident. Although the simulation is not without any incident, they are certainly rare. For the vast majority of the ride, the car has no incidents.
+
+![alt text][image3]
 #### 2. The car drives according to the speed limit.
 This is achieved by using a simple if condition. Because of road obstacles the vehicle velocity is incrementally increased and decreased. While increasing the vehicle velocity I used a simple if condition that checks if the velocity is above 49.5. If it is below the velocity is incremented if it is already at the maximum value nothing happens and the car continues with the current speed.
+
+![alt text][image6]
 
 #### 3. Max Acceleration and Jerk are not Exceeded.
 This is also achieved by incrementally increasing and decreasing vehicle velocity. If there is no obstacle in front of the vehicle, with each interaction between my code and the simulator I only add 0.224 to the velocity, with that I have ensured that no sudden change in vehicle speed by accelerating. With the the max acceleration and jerk requirements are satisfied.
@@ -33,9 +41,13 @@ By using the data from the sensor fusion we can get the information about other 
 #### 5. The car stays in its lane, except for the time between changing lanes.
 This requirement is met by using spline.h library. By using spline we are able to smooth out the calculated path of the vehicle and ensure that sharp turns are not a problem for the vehicle to handle. 
 
+![alt text][image4]
+
 #### 6. The car is able to change lanes
-For the lane change a simple state machine is implemented. By processing the data provided by the sensor fusion module, we are able to make estimation of the position of the vehicles around us. For the lane change is is important to estimate whether there is a vehicle in the same lane we are in and that the vehicle is directly in front of us. With this we see there is a need for a lane change. We also need to make estimation whether there are any vehicles in the lanes to the left or right, or that it is possible to make a lane change. 
+For the lane change a simple state machine is implemented. By processing the data provided by the sensor fusion module, we are able to make estimation of the position of the vehicles around us. For the lane change is is important to estimate whether there is a vehicle in the same lane we are in and that the vehicle is directly in front of us. With this we see there is a need for a lane change. We also need to make estimation whether there are any vehicles in the lanes to the left or right, or that it is possible to make a lane change.
+
+![alt text][image1]
 
 If there is a vehicle in front of us we simply change the lane state variable to the lane next to us that is available. If there are no lanes available we stay in the current lane and decrease speed. The default state of the state machine is the center lane. The vehicle will move back to the center lane after the lane change if there are no obstacles that prohibit that.
 
-![alt text][image1]
+![alt text][image5]
